@@ -48,7 +48,8 @@ def get_all_friends(user_id):
 
 def detail_user(user_id):
     try:
-        user = ChatAppUser.select(ChatAppUser.fullname, ChatAppUser.email, ChatAppUser.sex, ChatAppUser.birthday,
+        user = ChatAppUser.select(ChatAppUser.username, ChatAppUser.fullname, ChatAppUser.email, ChatAppUser.sex,
+                                  ChatAppUser.birthday,
                                   ChatAppUser.address).where(ChatAppUser.id == user_id)
         return model_to_dict(user.get())
     except Exception as Ex:
@@ -126,17 +127,19 @@ def unblock(blocker_id, user_id):
     return False
 
 
+def check_blocK_user(blocker_id, user_id):
+    try:
+        ChatAppBlockUser.get(ChatAppBlockUser.blocker == blocker_id, ChatAppBlockUser.user == user_id)
+        return True
+    except Exception as Ex:
+        pass
+    return False
+
 def get_all_friends_in_message(user_id):
     try:
-        query = (ChatAppFriend
-                 .select(ChatAppMessage.sender, ChatAppMessage.receiver, ChatAppUser.username,
-                         ChatAppMessage.is_read)
-                 .join(ChatAppMessage, on=(
-                (ChatAppMessage.sender == ChatAppFriend.friend) | (ChatAppMessage.receiver == ChatAppFriend.friend))
-                       )
-                 .order_by(ChatAppMessage.sent_date.desc())
-                 .join(ChatAppUser, on=(ChatAppFriend.friend == ChatAppUser.id))
-                 .where(ChatAppFriend.user == user_id)
+        query = (ChatAppMessage
+                 .select(ChatAppMessage.sender, ChatAppMessage.receiver, ChatAppMessage.is_read)
+                 .where((ChatAppMessage.sender == user_id) | (ChatAppMessage.receiver == user_id))
                  )
         return list(query.dicts())
     except Exception as Ex:
@@ -193,8 +196,6 @@ def delete_all_message(sender_id, receiver_id):
         query = ChatAppMessage.delete().where(
             (ChatAppMessage.sender == sender_id) & (ChatAppMessage.receiver == receiver_id) | (
                     ChatAppMessage.sender == receiver_id) & (ChatAppMessage.receiver == sender_id))
-        # (ChatAppMessage.sender == receiver_id & ChatAppMessage.receiver == sender_id))
-
         if query.execute() >= 1:
             return True
     except Exception as Ex:

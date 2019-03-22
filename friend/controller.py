@@ -44,7 +44,7 @@ def display_list_username(list_users):
         sync_logger.console('Could not display')
 
 
-def filter_searching_result(user_id, list_users, is_friend=False):
+def filter_searching_friend(user_id, list_users, is_friend=False):
     if list_users and len(list_users) > 0:
         # Except user is blocked, friend and user self
         list_blocks_user = get_all_blocks_user(user_id)
@@ -107,20 +107,19 @@ def view_friend(user_id):
                     return friend_id
             else:
                 print('Not found')
-                return -1
         elif number == 3:
             print("Exit")
-            return -1
     else:
         print("No Friend!")
-        return -1
+
+    return -1
 
 
 def add_new_friend(user_id):
     # Search username
     list_users = input_searching_username()
     # Filter searching result
-    sub_list_friends = filter_searching_result(user_id, list_users, is_friend=False)
+    sub_list_friends = filter_searching_friend(user_id, list_users, is_friend=False)
 
     if sub_list_friends and len(sub_list_friends) > 0:
         # Display list friends to add a new friend
@@ -144,7 +143,7 @@ def add_blocking_user(user_id):
     # Searching username
     list_users = input_searching_username()
     # Filter searching result
-    sub_list_friends = filter_searching_result(user_id, list_users, is_friend=True)
+    sub_list_friends = filter_searching_friend(user_id, list_users, is_friend=True)
 
     if sub_list_friends and len(sub_list_friends) > 0:
         # Display list user to block
@@ -218,18 +217,21 @@ def filter_friend_in_message(user_id):
                                 item['inbox'] += 1
 
         # Filter friend not in message and append list
-        for friend in list_friends:
+        for item in list_items:
             flag = 0
-            for i in range(len(list_ids)):
-                if friend.get('id') == list_ids[i]:
-                    list_items[i]['username'] = friend.get('username')
+            for friend in list_friends:
+                if item.get('id') == friend.get('id'):
+                    item['username'] = friend.get('username')
                     flag = 1
             if flag == 0:
-                list_items.append(friend)
+                username = detail_user(item.get('id')).get('username')
+                item['username'] = username
+    else:
+        return list_friends
 
-        return list_items
+    return list_items
 
 
 if __name__ == '__main__':
-    # print(filter_friend_in_message(1))
-    view_friend(1)
+    print(filter_friend_in_message(1))
+    # view_friend(1)

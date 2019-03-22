@@ -6,9 +6,7 @@ from database.models import migrator
 from friend.controller import add_new_friend, add_blocking_user, remove_blocking_user, view_friend
 from menu.controller import display_menu
 from message.controller import message
-# from message.controller import display_sent_message
 from my_log.logger import sync_logger
-# sync_logger.info("Main", "test logger")
 from utils.input_utils import input_reply_message, input_choosing_function
 
 
@@ -27,8 +25,8 @@ def main(user_id):
         elif option == 2:
             # Friend
             option = display_menu(4)
+            # View list friend
             if option == 1:
-                # View detail or delete a friend
                 friend_id = view_friend(user_id)
                 if friend_id >= 0:
                     option = input_choosing_function()
@@ -38,6 +36,7 @@ def main(user_id):
                             print('Delete friend successfully')
                         else:
                             sync_logger.console("Could not delete friend")
+                    # Reply message
                     elif option == "R":
                         input_reply_message(user_id, friend_id)
                     elif option == "E":

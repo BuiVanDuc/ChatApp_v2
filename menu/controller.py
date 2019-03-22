@@ -24,7 +24,7 @@ MENU_FRIEND = '''\r\n MANAGE FRIEND
 5. Back to main
 '''
 
-MENU_SEX_OPTIONS = '''\r\nVALID GENDER OPTIONS
+MENU_SEX_OPTIONS = '''\r\n VALID GENDER OPTIONS
 0. Male
 1. Female
 2. Gay
@@ -38,13 +38,13 @@ MENU_SELECT_FRIEND = '''\r\nSELECT A FRIEND
 3. Exit
 '''
 
-MENU_OPTION_FUNCTION = '''\r\nMANAGE FUNCTION
+MENU_OPTION_FUNCTION = '''\r\n MANAGE FUNCTION
 D: Delete
 R: Reply message
 E: Exit
 '''
 
-MENU_OPTION_DEL_MESSAGE = '''\nOPTION DELETE MESSAGE
+MENU_OPTION_DEL_MESSAGE = '''\r\n OPTION DELETE MESSAGE
 1. Delete a message
 2. Delete all messages 
 '''

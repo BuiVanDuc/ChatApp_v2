@@ -1,7 +1,7 @@
 import html
 import re
 
-from database.db_utils import search_user, sent_message
+from database.db_utils import search_user, sent_message, check_blocK_user
 from menu.controller import MENU_SEX_OPTIONS, MENU_OPTION_FUNCTION, \
     MENU_SELECT_FRIEND, MENU_OPTION_DEL_MESSAGE
 from my_log.logger import sync_logger
@@ -113,9 +113,12 @@ def input_delete_message():
 def input_reply_message(sender_id, receiver_id):
     message = input("Type a message:\t")
     if message and len(message) > 0:
-        if sent_message(sender_id, receiver_id, message):
-            print("Sent message successfully")
+        if check_blocK_user(sender_id, receiver_id):
+            print("Could not sent messYou are blocked")
         else:
-            sync_logger('Could not sent message')
+            if sent_message(sender_id, receiver_id, message):
+                print("Sent message successfully")
+            else:
+                sync_logger('Could not sent message')
     else:
         print('message is empty')

@@ -6,13 +6,13 @@ from utils.input_utils import input_choosing_function, input_select_friend, inpu
     input_reply_message
 
 
-def display_list_friend_message(list_items):
+def display_list_friend_message(list_friends):
     total_inbox = 0
     # display friend message
-    if list_items and len(list_items) > 0:
+    if list_friends and len(list_friends) > 0:
         index = 0
         print("LIST FRIEND MESSAGE:")
-        for item in list_items:
+        for item in list_friends:
             if 'inbox' in item:
                 total_inbox += 1
                 print("{}. {} inbox({})".format(index, item.get('username'), item.get('inbox')))
@@ -26,39 +26,35 @@ def display_list_friend_message(list_items):
             index += 1
         print("Total Inbox:({})".format(total_inbox))
     else:
-        print("No message!")
-        return -1
-
+        print("No friend!")
 
 # Select a friend in list to view
-def select_friend_message(user_id, list_items):
+def select_friend_message(user_id, list_friends):
     number = input_select_friend()
-
-    if number == 1:
-        min_number = 0
-        max_number = len(list_items) - 1
-        index = input_number(min_number, max_number)
-        if min_number <= index <= max_number:
-            return list_items[index].get('id')
-    elif number == 2:
-        sub_list_friends = display_search_friend(user_id)
-        if sub_list_friends and len(sub_list_friends) > 0:
-            # Display searching user:
-            display_list_username(sub_list_friends)
-
+    if list_friends and len(list_friends) > 0:
+        if number == 1:
             min_number = 0
-            max_number = len(sub_list_friends) - 1
+            max_number = len(list_friends) - 1
             index = input_number(min_number, max_number)
-
             if min_number <= index <= max_number:
-                return sub_list_friends[index].get('id')
-        else:
-            print("No friend!")
-            return -1
-    elif number == 3:
-        print("Exit")
-        return -1
+                return list_friends[index].get('id')
+        elif number == 2:
+            sub_list_friends = display_search_friend(user_id)
+            if sub_list_friends and len(sub_list_friends) > 0:
+                # Display searching user:
+                display_list_username(sub_list_friends)
 
+                min_number = 0
+                max_number = len(sub_list_friends) - 1
+                index = input_number(min_number, max_number)
+
+                if min_number <= index <= max_number:
+                    return sub_list_friends[index].get('id')
+            else:
+                print("No friend!")
+        elif number == 3:
+            print("Exit")
+    return -1
 
 def display_detail_message(user_id, list_detail_messages):
     if list_detail_messages and len(list_detail_messages) > 0:
@@ -87,44 +83,46 @@ def display_detail_message(user_id, list_detail_messages):
 def delete_friend_message(sender_id, receiver_id, list_detail_messages):
     number = input_delete_message()
 
-    if number == 1:
-        min_number = 0
-        max_number = len(list_detail_messages) - 1
-        index = input_number(min_number, max_number)
-        display_detail_message(sender_id, list_detail_messages)
-        if min_number <= index <= max_number:
-            message_id = list_detail_messages[index].get('id')
-            if delete_message(message_id):
-                print("Delete message Successfully")
+    if list_detail_messages and len(list_detail_messages) > 0:
+        if number == 1:
+            min_number = 0
+            max_number = len(list_detail_messages) - 1
+            index = input_number(min_number, max_number)
+            display_detail_message(sender_id, list_detail_messages)
+            if min_number <= index <= max_number:
+                message_id = list_detail_messages[index].get('id')
+                if delete_message(message_id):
+                    print("Delete message Successfully")
+                else:
+                    sync_logger.console("Could not delete message")
+        elif number == 2:
+            if delete_all_message(sender_id, receiver_id):
+                print("Delete all messages Successfully")
             else:
                 sync_logger.console("Could not delete message")
-    elif number == 2:
-        if delete_all_message(sender_id, receiver_id):
-            print("Delete all messages Successfully")
         else:
-            sync_logger.console("Could not delete message")
-    else:
-        print("Invalid option")
-
+            print("Invalid option")
+    print("No friend message")
 
 def message(user_id):
     # Display friend message
     list_friend_mss = filter_friend_in_message(user_id)
     display_list_friend_message(list_friend_mss)
     # Choose friend message to view detail
-    friend_id = select_friend_message(user_id, list_friend_mss)
-    if friend_id >= 0:
-        list_detail_messages = get_all_friend_messages(user_id, friend_id)
-        display_detail_message(user_id, list_detail_messages)
-        while True:
-            option = input_choosing_function()
-            # Delete message
-            if option == "D":
-                delete_friend_message(user_id, friend_id, list_detail_messages)
-            # Reply message
-            elif option == "R":
-                input_reply_message(user_id, friend_id)
-            # Exit
-            elif option == "E":
-                print("Exit")
-                break
+    if list_friend_mss and len(list_friend_mss) > 0:
+        friend_id = select_friend_message(user_id, list_friend_mss)
+        if friend_id >= 0:
+            list_detail_messages = get_all_friend_messages(user_id, friend_id)
+            display_detail_message(user_id, list_detail_messages)
+            while True:
+                option = input_choosing_function()
+                # Delete message
+                if option == "D":
+                    delete_friend_message(user_id, friend_id, list_detail_messages)
+                # Reply message
+                elif option == "R":
+                    input_reply_message(user_id, friend_id)
+                # Exit
+                elif option == "E":
+                    print("Exit")
+                    break
