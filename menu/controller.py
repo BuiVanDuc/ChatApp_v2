@@ -12,12 +12,13 @@ MENU_MAIN = '''\r\n MANAGE MAIN
 3. Logout
 '''
 MENU_MESSAGE = '''\r\n MANAGE MESSAGE
-1. View _ Send
+1. View and other utils
+2. Sent message
 2. Back to main
 '''
 
 MENU_FRIEND = '''\r\n MANAGE FRIEND
-1. View - Delete - Reply
+1. View and other utils
 2. Add friend
 3. Block
 4. Unblock
@@ -34,11 +35,11 @@ MENU_SEX_OPTIONS = '''\r\n VALID GENDER OPTIONS
 
 MENU_SELECT_FRIEND = '''\r\nSELECT A FRIEND
 1. Choose number
-2. Search name friend
+2. Search username
 3. Exit
 '''
 
-MENU_OPTION_FUNCTION = '''\r\n MANAGE FUNCTION
+MENU_OPTION_FUNCTION = '''\r\n MANAGE UTIL FUNCTIONS
 D: Delete
 R: Reply message
 E: Exit

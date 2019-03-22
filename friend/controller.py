@@ -1,8 +1,65 @@
 from database.db_utils import detail_user, is_friend_existed, add_friend, get_all_blocks_user, block_user, unblock, \
-    get_all_friends, get_all_friends_in_message
+    get_all_friends, get_all_friends_in_message, remove_friend
 from database.models import convert_sex_number_to_name
 from my_log.logger import sync_logger
-from utils.input_utils import input_searching_username, input_number, input_select_friend
+from utils.input_utils import input_searching_username, input_number, input_select_friend, input_util_function, \
+    input_reply_message
+
+
+def display_list_username(list_users):
+    print("LIST FRIEND")
+    index = 0
+    for user in list_users:
+        print("{}. {}".format(index, user.get('username')))
+        index += 1
+
+
+def select_detail_friend(user_id, list_friends):
+    # Choosing friend:
+    number = input_select_friend()
+    if number == 1:
+        # Choosing number to view detail
+        min_number = 0
+        max_number = len(list_friends) - 1
+        index = input_number(min_number, max_number)
+
+        if min_number <= index <= max_number:
+            # Display friend profiled
+            friend_id = list_friends[index].get('id')
+            display_detail_friend(friend_id)
+            return friend_id
+    elif number == 2:
+        # Search friend in list friends
+        sub_list_friends = display_search_friend(user_id)
+
+        if sub_list_friends and len(sub_list_friends) > 0:
+            # Display list friends
+            display_list_username(sub_list_friends)
+            # Choosing number to view detail
+            min_number = 0
+            max_number = len(sub_list_friends) - 1
+            index = input_number(min_number, max_number)
+            if min_number <= index <= max_number:
+                # Display friend profiled
+                friend_id = sub_list_friends[index].get('id')
+                # Option for delete or view detail friend
+                display_detail_friend(friend_id)
+                return friend_id
+        else:
+            print('Not found')
+    elif number == 3:
+        print("Exit")
+    return -1
+
+def display_detail_friend(friend_id):
+    list_info = detail_user(friend_id)
+    # Convert sex to name
+    list_info['sex'] = convert_sex_number_to_name(list_info.get('sex'))
+
+    print("DETAIL INFO:")
+    for key, value in list_info.items():
+        if value:
+            print("# {}: {}".format(key.capitalize(), value))
 
 
 def display_search_friend(user_id):
@@ -19,30 +76,7 @@ def display_search_friend(user_id):
         if len(ret_data) > 0:
             return ret_data
     else:
-        print("No result!")
-        return -1
-
-
-def display_detail_friend(friend_id):
-    list_info = detail_user(friend_id)
-    # Convert sex to name
-    list_info['sex'] = convert_sex_number_to_name(list_info.get('sex'))
-
-    print("DETAIL INFO:")
-    for key, value in list_info.items():
-        if value:
-            print("# {}: {}".format(key.capitalize(), value))
-
-
-def display_list_username(list_users):
-    if list_users and len(list_users) > 0:
-        index = 0
-        for user in list_users:
-            print("{}. {}".format(index, user.get('username')))
-            index += 1
-    else:
-        sync_logger.console('Could not display')
-
+        print("Username is empty. Please try again")
 
 def filter_searching_friend(user_id, list_users, is_friend=False):
     if list_users and len(list_users) > 0:
@@ -69,50 +103,40 @@ def filter_searching_friend(user_id, list_users, is_friend=False):
         return new_list_users
 
 
-def view_friend(user_id):
-    print("\nLIST FRIEND")
-    list_friends = get_all_friends(user_id)
-    if list_friends and len(list_friends) > 0:
-        # Display list friend
-        display_list_username(list_friends)
-        # Choosing friend:
-        number = input_select_friend()
-        if number == 1:
-            # Choosing number to view detail
-            min_number = 0
-            max_number = len(list_friends) - 1
-            index = input_number(min_number, max_number)
-
-            if min_number <= index <= max_number:
-                # Display friend profiled
-                friend_id = list_friends[index].get('id')
-                display_detail_friend(friend_id)
-                return friend_id
-        elif number == 2:
-            # Search friend in list friends
-            sub_list_friends = display_search_friend(user_id)
-
-            if sub_list_friends and len(sub_list_friends) > 0:
-                # Display list friends
-                display_list_username(sub_list_friends)
-                # Choosing number to view detail
-                min_number = 0
-                max_number = len(sub_list_friends) - 1
-                index = input_number(min_number, max_number)
-                if min_number <= index <= max_number:
-                    # Display friend profiled
-                    friend_id = sub_list_friends[index].get('id')
-                    # Option for delete or view detail friend
-                    display_detail_friend(friend_id)
-                    return friend_id
-            else:
-                print('Not found')
-        elif number == 3:
-            print("Exit")
+def choose_util_friend_function(user_id, friend_id):
+    # Option util function
+    option = input_util_function()
+    # Delete friend
+    if option == "D":
+        if remove_friend(user_id, friend_id):
+            print('Delete friend successfully')
+        else:
+            sync_logger.console("Could not delete friend")
+    # Reply message
+    elif option == "R":
+        input_reply_message(user_id, friend_id)
+    elif option == "E":
+        print("Exit")
     else:
-        print("No Friend!")
+        print("Invalid option")
 
-    return -1
+
+def friend(user_id):
+    list_friends = get_all_friends(user_id)
+
+    if list_friends and len(list_friends) > 0:
+        # List all friends
+        display_list_username(list_friends)
+        # Select a friend
+        friend_id = select_detail_friend(user_id, list_friends)
+
+        if friend_id >= 0:
+            # Display detail a friend
+            display_detail_friend(friend_id)
+            # Option other function
+            choose_util_friend_function(user_id, friend_id)
+    else:
+        print("No friend!")
 
 
 def add_new_friend(user_id):
@@ -134,7 +158,7 @@ def add_new_friend(user_id):
             if add_friend(user_id, friend_id):
                 print('Add new friend successfully!')
             else:
-                sync_logger.console("\nAdd new friend failed")
+                sync_logger.console("\nAdding new friend failed")
     else:
         print('Not found!')
 
@@ -231,7 +255,5 @@ def filter_friend_in_message(user_id):
 
     return list_items
 
-
 if __name__ == '__main__':
-    print(filter_friend_in_message(1))
-    # view_friend(1)
+    friend(1)

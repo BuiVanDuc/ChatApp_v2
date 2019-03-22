@@ -159,7 +159,7 @@ def get_all_friend_messages(sender_id, receiver_id):
         pass
 
 
-def sent_message(sender_id, receiver_id, message):
+def create_message(sender_id, receiver_id, message):
     try:
         ChatAppMessage.create(sender_id=sender_id, receiver_id=receiver_id, message=message)
         return True

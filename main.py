@@ -1,13 +1,11 @@
 import sys
 
 from auth.controller import auth_login, register_account
-from database.db_utils import remove_friend
 from database.models import migrator
-from friend.controller import add_new_friend, add_blocking_user, remove_blocking_user, view_friend
+from friend.controller import add_new_friend, add_blocking_user, remove_blocking_user, friend
 from menu.controller import display_menu
-from message.controller import message
+from message.controller import sent_message, message
 from my_log.logger import sync_logger
-from utils.input_utils import input_reply_message, input_choosing_function
 
 
 def main(user_id):
@@ -16,33 +14,22 @@ def main(user_id):
         if option == 1:
             # Message
             option = display_menu(3)
+            # View message and other utils
             if option == 1:
                 message(user_id)
+            # Sen message for someone
             elif option == 2:
-                print('Back to main')
+                sent_message(user_id)
+            elif option == 3:
+                print("Back to message")
             else:
                 print('Invalid option. Please option number message menu')
         elif option == 2:
             # Friend
             option = display_menu(4)
-            # View list friend
+            # View friend and other utils
             if option == 1:
-                friend_id = view_friend(user_id)
-                if friend_id >= 0:
-                    option = input_choosing_function()
-                    # Delete friend
-                    if option == "D":
-                        if remove_friend(user_id, friend_id):
-                            print('Delete friend successfully')
-                        else:
-                            sync_logger.console("Could not delete friend")
-                    # Reply message
-                    elif option == "R":
-                        input_reply_message(user_id, friend_id)
-                    elif option == "E":
-                        print("Exit")
-                    else:
-                        print("Invalid option")
+                friend(user_id)
             elif option == 2:
                 # Add new friend
                 add_new_friend(user_id)

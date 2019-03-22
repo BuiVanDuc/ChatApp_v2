@@ -1,7 +1,7 @@
 import html
 import re
 
-from database.db_utils import search_user, sent_message, check_blocK_user
+from database.db_utils import search_user, check_blocK_user, create_message
 from menu.controller import MENU_SEX_OPTIONS, MENU_OPTION_FUNCTION, \
     MENU_SELECT_FRIEND, MENU_OPTION_DEL_MESSAGE
 from my_log.logger import sync_logger
@@ -76,13 +76,12 @@ def input_searching_username():
 
 
 def input_number(min_number, max_number):
-    print("Choosing number from {} to {}".format(min_number, max_number))
+    print("Enter number in [{}:{}]".format(min_number, max_number))
     try:
         number = int(input('Enter number:\t'))
         return number
     except Exception as Ex:
         sync_logger.console(Ex)
-
 
 
 def input_select_friend():
@@ -94,7 +93,7 @@ def input_select_friend():
         sync_logger.console(Ex)
 
 
-def input_choosing_function():
+def input_util_function():
     print(MENU_OPTION_FUNCTION)
 
     option = input("Choose a function:\t")
@@ -116,7 +115,7 @@ def input_reply_message(sender_id, receiver_id):
         if check_blocK_user(sender_id, receiver_id):
             print("Could not sent messYou are blocked")
         else:
-            if sent_message(sender_id, receiver_id, message):
+            if create_message(sender_id, receiver_id, message):
                 print("Sent message successfully")
             else:
                 sync_logger('Could not sent message')
