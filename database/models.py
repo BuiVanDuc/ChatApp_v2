@@ -2,8 +2,8 @@ import datetime
 import json
 import os
 
+from peewee import *
 from peewee_migrate import Migrator
-from playhouse.migrate import *
 
 from settings import BASE_DIR
 
@@ -106,7 +106,7 @@ class ChatAppBlockUser(BaseModel):
         db_table = 'chat_app_blocking_user'
 
 
-def convert_sex_number_to_name(sex):
+def convert_sex_number_to_name(sex_number):
     for key, value in LIST_AUGI_GENDER.items():
-        if value == sex:
+        if value == sex_number:
             return key

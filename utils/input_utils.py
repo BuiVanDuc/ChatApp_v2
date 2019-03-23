@@ -1,9 +1,8 @@
 import html
 import re
 
-from database.db_utils import search_user, check_blocK_user, create_message
 from menu.controller import MENU_SEX_OPTIONS, MENU_OPTION_FUNCTION, \
-    MENU_SELECT_FRIEND, MENU_OPTION_DEL_MESSAGE
+    MENU_OPTION_DEL_MESSAGE, MENU_SELECT_USER
 from my_log.logger import sync_logger
 from utils.date_util import convert_string_to_date, FORMAT_DATE
 from utils.email_util import is_email_validated
@@ -66,26 +65,21 @@ def input_sex():
         print("\r\rnYou enter invalid option, please try again!")
 
 
-def input_searching_username():
-    username = input("Type a username:\t")
-    if len(username) > 0:
-        list_users = search_user(username)
-        return list_users
-    else:
-        print('You enter a empty username, please try again!')
-
+def input_string_data(message="Enter string:\t"):
+    return input(message)
 
 def input_number(min_number, max_number):
     print("Enter number in [{}:{}]".format(min_number, max_number))
     try:
         number = int(input('Enter number:\t'))
-        return number
+        if min_number <= number <= max_number:
+            return number
     except Exception as Ex:
         sync_logger.console(Ex)
 
 
-def input_select_friend():
-    print(MENU_SELECT_FRIEND)
+def input_select_user():
+    print(MENU_SELECT_USER)
     try:
         option = int(input("Enter number:\t"))
         return option
@@ -109,15 +103,9 @@ def input_delete_message():
         sync_logger.console(Ex)
 
 
-def input_reply_message(sender_id, receiver_id):
-    message = input("Type a message:\t")
-    if message and len(message) > 0:
-        if check_blocK_user(sender_id, receiver_id):
-            print("Could not sent messYou are blocked")
-        else:
-            if create_message(sender_id, receiver_id, message):
-                print("Sent message successfully")
-            else:
-                sync_logger('Could not sent message')
+def input_search_username():
+    username = input("Type a username:\t")
+    if len(username) > 0:
+        return username
     else:
-        print('message is empty')
+        print('You enter a empty username, please try again!')

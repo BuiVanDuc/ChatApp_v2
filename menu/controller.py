@@ -33,9 +33,9 @@ MENU_SEX_OPTIONS = '''\r\n VALID GENDER OPTIONS
 4. Other
 '''
 
-MENU_SELECT_FRIEND = '''\r\nSELECT A FRIEND
-1. Choose number
-2. Search username
+MENU_SELECT_USER = '''\r\nSELECT A USER
+1. Select number user
+2. Search username and select
 3. Exit
 '''
 
@@ -49,7 +49,6 @@ MENU_OPTION_DEL_MESSAGE = '''\r\n OPTION DELETE MESSAGE
 1. Delete a message
 2. Delete all messages 
 '''
-
 
 def display_menu(menu):
     # Clear screen

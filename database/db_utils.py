@@ -1,9 +1,9 @@
-from playhouse.shortcuts import model_to_dict
-
 from database.models import ChatAppUser, ChatAppMessage, ChatAppFriend, ChatAppBlockUser
 
 
 # Auth
+
+
 def login(email, password):
     try:
         user = ChatAppUser.get((ChatAppUser.email == email) & (ChatAppUser.password == password))
@@ -32,38 +32,51 @@ def register(username, password, birthday, fullname, email, address, sex=None):
     return False
 
 
-#  Friend
+def search_friends_by_user_id_and_friend_name(user_id, username):
+    _ret_data = ChatAppUser.select().where(ChatAppUser.id.in_(ChatAppFriend.select(ChatAppFriend.friend).where((ChatAppFriend.user == user_id) &(ChatAppUser.username.contains(username)))))
+
+    return _ret_data
+
 def get_all_friends(user_id):
     try:
-        query = (ChatAppFriend
-                 .select(ChatAppUser.id, ChatAppUser.username)
-                 .join(ChatAppUser, on=(ChatAppFriend.friend == ChatAppUser.id))
-                 .where(ChatAppFriend.user == user_id)
-                 .order_by(ChatAppUser.username.asc())
-                 )
-        return list(query.dicts())
+        _ret_data = (ChatAppUser.select()
+                     .where(ChatAppUser.id.in_(ChatAppFriend.select(ChatAppFriend.friend)
+                                               .where(ChatAppFriend.id == user_id))))
+        return _ret_data
     except Exception as Ex:
         pass
 
 
 def detail_user(user_id):
     try:
-        user = ChatAppUser.select(ChatAppUser.username, ChatAppUser.fullname, ChatAppUser.email, ChatAppUser.sex,
-                                  ChatAppUser.birthday,
-                                  ChatAppUser.address).where(ChatAppUser.id == user_id)
-        return model_to_dict(user.get())
+        _ret_data = ChatAppUser.select(ChatAppUser.username, ChatAppUser.fullname, ChatAppUser.email, ChatAppUser.sex,
+                                       ChatAppUser.birthday,
+                                       ChatAppUser.address).where(ChatAppUser.id == user_id)
+        return _ret_data
     except Exception as Ex:
         pass
 
 
-def search_user(username):
+def search_user_by_id_and_by_name(user_id, username):
     try:
-        users = ChatAppUser.select(ChatAppUser.id, ChatAppUser.username).order_by(ChatAppUser.username.asc()).where(
-            ChatAppUser.username.contains(username))
-        return list(users.dicts())
+        _ret_data = (ChatAppUser.select(ChatAppUser.id, ChatAppUser.username)
+                     .order_by(ChatAppUser.username.asc())
+                     .where(ChatAppUser.id.not_in(
+            ChatAppBlockUser.select(ChatAppBlockUser.user).where(ChatAppBlockUser.blocker == user_id))
+                            & (ChatAppUser.username.contains(username) & (ChatAppUser.id != user_id))))
+
+        return _ret_data
     except Exception as Ex:
         pass
 
+
+def is_friend_existed(user_id, friend_id):
+    try:
+        ChatAppFriend.get(ChatAppFriend.user == user_id, ChatAppFriend.friend == friend_id)
+        return True
+    except Exception as Ex:
+        pass
+    return False
 
 def add_friend(user_id, friend_id):
     try:
@@ -83,26 +96,16 @@ def remove_friend(user_id, friend_id):
         pass
     return False
 
-
-def is_friend_existed(user_id, friend_id):
-    try:
-        ChatAppFriend.get(ChatAppFriend.user == user_id, ChatAppFriend.friend == friend_id)
-        return True
-    except Exception as Ex:
-        pass
-    return False
-
-
 # Queries for block user
 def get_all_blocks_user(user_id):
     try:
-        query = (ChatAppBlockUser
-                 .select(ChatAppBlockUser.user.alias('id'), ChatAppUser.username)
-                 .join(ChatAppUser, on=(ChatAppBlockUser.user == ChatAppUser.id))
-                 .where(ChatAppBlockUser.blocker == user_id)
-                 .order_by(ChatAppUser.username.asc())
-                 )
-        return list(query.dicts())
+        _ret_data = (ChatAppBlockUser
+                     .select(ChatAppBlockUser.user.alias('id'), ChatAppUser.username)
+                     .join(ChatAppUser, on=(ChatAppBlockUser.user == ChatAppUser.id))
+                     .where(ChatAppBlockUser.blocker == user_id)
+                     .order_by(ChatAppUser.username.asc())
+                     )
+        return _ret_data
     except Exception as Ex:
         pass
 
@@ -127,7 +130,7 @@ def unblock(blocker_id, user_id):
     return False
 
 
-def check_blocK_user(blocker_id, user_id):
+def is_user_blocked(blocker_id, user_id):
     try:
         ChatAppBlockUser.get(ChatAppBlockUser.blocker == blocker_id, ChatAppBlockUser.user == user_id)
         return True
@@ -159,7 +162,7 @@ def get_all_friend_messages(sender_id, receiver_id):
         pass
 
 
-def create_message(sender_id, receiver_id, message):
+def sent_message(sender_id, receiver_id, message):
     try:
         ChatAppMessage.create(sender_id=sender_id, receiver_id=receiver_id, message=message)
         return True
@@ -215,3 +218,9 @@ def list_friend_by_sent_date(user_id):
         return list(query.dicts())
     except Exception as Ex:
         pass
+
+
+ret_data = search_friends_by_user_id_and_friend_name(1,'c')
+
+for _friend in ret_data:
+    print(_friend.id)

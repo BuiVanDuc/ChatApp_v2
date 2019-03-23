@@ -1,109 +1,101 @@
-from database.db_utils import detail_user, is_friend_existed, add_friend, get_all_blocks_user, block_user, unblock, \
-    get_all_friends, get_all_friends_in_message, remove_friend
+from database.db_utils import detail_user, get_all_blocks_user, get_all_friends, remove_friend, sent_message, \
+    search_friends_by_user_id_and_friend_name, search_user_by_id_and_by_name, \
+    add_friend, is_friend_existed, is_user_blocked, block_user, unblock
 from database.models import convert_sex_number_to_name
 from my_log.logger import sync_logger
-from utils.input_utils import input_searching_username, input_number, input_select_friend, input_util_function, \
-    input_reply_message
+from utils.date_util import FORMAT_DATE, convert_datetime_to_string
+from utils.input_utils import input_number, input_util_function, \
+    input_string_data, input_select_user
 
 
-def display_list_username(list_users):
-    print("LIST FRIEND")
+def display_list_users(list_data):
+    print("\nLIST FRIENDS")
     index = 0
-    for user in list_users:
-        print("{}. {}".format(index, user.get('username')))
+    for _user in list_data:
+        print("{}. {}".format(index, _user.username))
         index += 1
 
 
-def select_detail_friend(user_id, list_friends):
-    # Choosing friend:
-    number = input_select_friend()
+def select_detail_user(user_id, list_friends):
+    # Select friend:
+    number = input_select_user()
+    # Select number user
     if number == 1:
-        # Choosing number to view detail
-        min_number = 0
-        max_number = len(list_friends) - 1
-        index = input_number(min_number, max_number)
-
-        if min_number <= index <= max_number:
-            # Display friend profiled
-            friend_id = list_friends[index].get('id')
-            display_detail_friend(friend_id)
+        index = input_number(0, len(list_friends) - 1)
+        if index is not None:
+            # Display detail info friend
+            friend_id = list_friends[index].id
             return friend_id
+    # Search username
     elif number == 2:
-        # Search friend in list friends
-        sub_list_friends = display_search_friend(user_id)
-
-        if sub_list_friends and len(sub_list_friends) > 0:
+        list_friends = search_friend_by_name(user_id)
+        if list_friends and len(list_friends) > 0:
             # Display list friends
-            display_list_username(sub_list_friends)
-            # Choosing number to view detail
-            min_number = 0
-            max_number = len(sub_list_friends) - 1
-            index = input_number(min_number, max_number)
-            if min_number <= index <= max_number:
-                # Display friend profiled
-                friend_id = sub_list_friends[index].get('id')
-                # Option for delete or view detail friend
-                display_detail_friend(friend_id)
+            display_list_users(list_friends)
+
+            # Choosing friend number to view detail
+            index = input_number(0, len(list_friends) - 1)
+            if index is not None:
+                # Display detail a friend
+                friend_id = list_friends[index].id
                 return friend_id
         else:
-            print('Not found')
+            print('No result')
     elif number == 3:
         print("Exit")
     return -1
 
-def display_detail_friend(friend_id):
+
+def display_detail_user(friend_id):
     list_info = detail_user(friend_id)
-    # Convert sex to name
-    list_info['sex'] = convert_sex_number_to_name(list_info.get('sex'))
+    # Convert object to dict
+    list_info = list(list_info.dicts())[0]
+    # Convert sex number to sex name
+    list_info.update({'sex': convert_sex_number_to_name(list_info.get('sex'))})
+    # Convert birth date formart: dd-mm-yyyy
+    list_info.update({'birthday': convert_datetime_to_string(list_info.get('birthday'), FORMAT_DATE.get('dd-mm-YYYY'))})
 
-    print("DETAIL INFO:")
-    for key, value in list_info.items():
-        if value:
-            print("# {}: {}".format(key.capitalize(), value))
+    print('\nINFO FRIEND:')
+    index = 0
+    for key, vale in list_info.items():
+        if vale:
+            index += 1
+            print("{}. {}: {}".format(index, key.capitalize(), vale))
 
 
-def display_search_friend(user_id):
+def search_friend_by_name(user_id):
     # Search friend username
-    username = input("Type a username:\t")
-    if len(username) > 0:
-        list_friends = get_all_friends(user_id)
-        ret_data = list()
+    friend_name = input_string_data("Enter name of friend:\t")
+    list_friends = search_friends_by_user_id_and_friend_name(user_id, friend_name)
+    return list_friends
 
-        for friend in list_friends:
-            if username in friend.get('username'):
-                ret_data.append(friend)
 
-        if len(ret_data) > 0:
-            return ret_data
+def search_user_by_name(user_id):
+    # Search username
+    username = input_string_data("Enter name of user:\t")
+    list_users = search_user_by_id_and_by_name(user_id, username)
+
+    return list_users
+
+
+def reply_message(sender_id, receiver_id):
+    if is_user_blocked(sender_id, receiver_id):
+        print('Please unblock to sent message')
+    elif is_user_blocked(sender_id, receiver_id):
+        print('You are blocked')
     else:
-        print("Username is empty. Please try again")
+        message = input_string_data('Type a message:\t')
 
-def filter_searching_friend(user_id, list_users, is_friend=False):
-    if list_users and len(list_users) > 0:
-        # Except user is blocked, friend and user self
-        list_blocks_user = get_all_blocks_user(user_id)
-        new_list_users = list()
-
-        if list_blocks_user and len(list_blocks_user) > 0:
-            for user in list_users:
-                if user not in list_blocks_user and user.get('id') != user_id:
-                    if not is_friend:
-                        if not is_friend_existed(user_id, user.get('id')):
-                            new_list_users.append(user)
-                    else:
-                        new_list_users.append(user)
+        if message and len(message) > 0:
+            if sent_message(sender_id, receiver_id, message):
+                print('Sent message successfully')
+            else:
+                sync_logger.console('Sent message failed')
         else:
-            for user in list_users:
-                if user.get('id') != user_id:
-                    if not is_friend:
-                        if not is_friend_existed(user_id, user.get('id')):
-                            new_list_users.append(user)
-                    else:
-                        new_list_users.append(user)
-        return new_list_users
+            print('Message is empty, please try agian')
 
 
-def choose_util_friend_function(user_id, friend_id):
+def select_util_function_in_friend(user_id, friend_id):
     # Option util function
     option = input_util_function()
     # Delete friend
@@ -114,7 +106,7 @@ def choose_util_friend_function(user_id, friend_id):
             sync_logger.console("Could not delete friend")
     # Reply message
     elif option == "R":
-        input_reply_message(user_id, friend_id)
+        reply_message(user_id, friend_id)
     elif option == "E":
         print("Exit")
     else:
@@ -122,138 +114,86 @@ def choose_util_friend_function(user_id, friend_id):
 
 
 def friend(user_id):
-    list_friends = get_all_friends(user_id)
+    list_data = get_all_friends(user_id)
 
-    if list_friends and len(list_friends) > 0:
+    if list_data and len(list_data) > 0:
         # List all friends
-        display_list_username(list_friends)
+        display_list_users(list_data)
         # Select a friend
-        friend_id = select_detail_friend(user_id, list_friends)
+        friend_id = select_detail_user(user_id, list_data)
 
         if friend_id >= 0:
             # Display detail a friend
-            display_detail_friend(friend_id)
+            display_detail_user(friend_id)
             # Option other function
-            choose_util_friend_function(user_id, friend_id)
+            select_util_function_in_friend(user_id, friend_id)
     else:
         print("No friend!")
 
 
 def add_new_friend(user_id):
-    # Search username
-    list_users = input_searching_username()
-    # Filter searching result
-    sub_list_friends = filter_searching_friend(user_id, list_users, is_friend=False)
+    list_data = search_user_by_name(user_id)
 
-    if sub_list_friends and len(sub_list_friends) > 0:
-        # Display list friends to add a new friend
-        display_list_username(sub_list_friends)
-        # Choosing number to add friend
-        min_number = 0
-        max_number = len(sub_list_friends) - 1
-        index = input_number(min_number, max_number)
-        # Check index in [min_number:max_number] or not
-        if min_number <= index <= max_number:
-            friend_id = sub_list_friends[index].get('id')
-            if add_friend(user_id, friend_id):
-                print('Add new friend successfully!')
+    if list_data and len(list_data) > 0:
+        # Display list name user
+        display_list_users(list_data)
+        # Select user number
+        index = input_number(0, len(list_data) - 1)
+        friend_id = list_data[index].id
+
+        if friend_id >= 0:
+            if is_friend_existed(user_id, friend_id):
+                print("Add new friend successfully")
+            elif add_friend(1, friend_id):
+                print("Add new friend successfully")
             else:
-                sync_logger.console("\nAdding new friend failed")
+                sync_logger.console("Add friend failed!")
+        else:
+            sync_logger.console("Could not add a new friend!")
     else:
-        print('Not found!')
+        print("No result")
 
 
-def add_blocking_user(user_id):
+def add_block_user(blocker_id):
     # Searching username
-    list_users = input_searching_username()
-    # Filter searching result
-    sub_list_friends = filter_searching_friend(user_id, list_users, is_friend=True)
+    list_data = search_user_by_name(blocker_id)
 
-    if sub_list_friends and len(sub_list_friends) > 0:
-        # Display list user to block
-        display_list_username(sub_list_friends)
-        # Choosing number to block user
-        min_number = 0
-        max_number = len(sub_list_friends) - 1
-        index = input_number(min_number, max_number)
-        # Check index in [min_number:max_number] or not
-        if index and min_number <= index <= max_number:
-            friend_id = sub_list_friends[index].get('id')
-            if block_user(user_id, friend_id):
-                print('Block successfully!')
+    if list_data and len(list_data) > 0:
+        # Display list name user
+        display_list_users(list_data)
+        # Select user number
+        index = input_number(0, len(list_data) - 1)
+        user_id = list_data[index].id
+
+        if user_id >= 0:
+            if is_user_blocked(blocker_id, user_id):
+                print('Block successfully')
+            elif block_user(blocker_id, user_id):
+                print('Block successfully')
             else:
-                sync_logger.console("\nCould not block!")
+                sync_logger.console('Block user failed')
+        else:
+            sync_logger.console('Could not block')
     else:
-        print('Not Found')
+        print('No result')
 
 
-def remove_blocking_user(user_id):
-    list_blocks_user = get_all_blocks_user(user_id)
-    if list_blocks_user and len(list_blocks_user) > 0:
+def remove_block_user(blocker_id):
+    blocks_user = get_all_blocks_user(blocker_id)
+
+    if blocks_user and len(blocks_user) > 0:
         # Display list blocks user
-        display_list_username(list_blocks_user)
-        # Choosing number to remove a block user
-        min_number = 0
-        max_number = len(list_blocks_user) - 1
-        index = input_number(min_number, max_number)
-        # Check index in [min_number:max_number] or not
-        if index and min_number <= index <= max_number:
-            friend_id = list_blocks_user[index].get('id')
-            if unblock(user_id, friend_id):
-                print('Remove block successfully!')
+        display_list_users(blocks_user)
+        # Select user number
+        index = input_number(0, len(blocks_user) - 1)
+        user_id = blocks_user[index].id
+
+        if user_id >= 0:
+            if unblock(blocker_id, user_id):
+                print('Remove block successfully')
             else:
-                sync_logger.console("\nCould remove block!")
+                sync_logger.console('Remove block failed')
+        else:
+            sync_logger.console('Could not remove block')
     else:
-        print('No block!')
-
-
-def filter_friend_in_message(user_id):
-    list_friends_in_mss = get_all_friends_in_message(user_id)
-    list_friends = get_all_friends(user_id)
-    list_ids = list()
-    list_items = list()
-
-    if list_friends_in_mss and len(list_friends_in_mss) > 0:
-        for friend_in_mss in list_friends_in_mss:
-            item = dict()
-            if friend_in_mss.get('sender') == user_id:
-                if friend_in_mss.get('receiver') not in list_ids:
-                    item['id'] = friend_in_mss.get('receiver')
-                    item['is_read'] = friend_in_mss.get('is_read')
-                    # Update list ID
-                    list_ids.append(friend_in_mss.get('receiver'))
-                    # Append item to list
-                    list_items.append(item.copy())
-            elif friend_in_mss.get('receiver') == user_id:
-                if friend_in_mss.get('sender') not in list_ids:
-                    item['inbox'] = 0
-                    if friend_in_mss.get('is_read') == 0:
-                        item['inbox'] = 1
-                    item['id'] = friend_in_mss.get('sender')
-                    # Update list ID
-                    list_ids.append(friend_in_mss.get('sender'))
-                    # Append item to list
-                    list_items.append(item.copy())
-                else:
-                    if friend_in_mss.get('is_read') == 0:
-                        for item in list_items:
-                            if item.get('id') == friend_in_mss.get('sender') and 'inbox' in item:
-                                item['inbox'] += 1
-
-        # Filter friend not in message and append list
-        for item in list_items:
-            flag = 0
-            for friend in list_friends:
-                if item.get('id') == friend.get('id'):
-                    item['username'] = friend.get('username')
-                    flag = 1
-            if flag == 0:
-                username = detail_user(item.get('id')).get('username')
-                item['username'] = username
-    else:
-        return list_friends
-
-    return list_items
-
-if __name__ == '__main__':
-    friend(1)
+        print('No block user!')

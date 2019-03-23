@@ -17,7 +17,7 @@ def main(user_id):
             # View message and other utils
             if option == 1:
                 message(user_id)
-            # Sen message for someone
+            # Sent message for someone
             elif option == 2:
                 sent_message(user_id)
             elif option == 3:

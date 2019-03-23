@@ -1,10 +1,75 @@
-from database.db_utils import get_all_friend_messages, delete_all_message, delete_message, read_message
-from friend.controller import display_search_friend, display_list_username, filter_friend_in_message
+from database.db_utils import get_all_friend_messages, delete_all_message, delete_message, read_message, detail_user, \
+    get_all_friends_in_message, get_all_friends
+from friend.controller import display_search_friend, display_list_username
 from my_log.logger import sync_logger
 from utils.date_util import get_date_now
 from utils.input_utils import input_select_friend, input_number, input_delete_message, \
-    input_reply_message, input_util_function, input_searching_username
+    input_reply_message, input_util_function, input_searching_username, input_search_username
 
+
+def filter_friend_in_message(user_id):
+    list_friends_in_mss = get_all_friends_in_message(user_id)
+    list_friends = get_all_friends(user_id)
+    list_ids = list()
+    list_items = list()
+
+    if list_friends_in_mss and len(list_friends_in_mss) > 0:
+        for friend_in_mss in list_friends_in_mss:
+            item = dict()
+            if friend_in_mss.get('sender') == user_id:
+                if friend_in_mss.get('receiver') not in list_ids:
+                    item['id'] = friend_in_mss.get('receiver')
+                    item['is_read'] = friend_in_mss.get('is_read')
+                    # Update list ID
+                    list_ids.append(friend_in_mss.get('receiver'))
+                    # Append item to list
+                    list_items.append(item.copy())
+            elif friend_in_mss.get('receiver') == user_id:
+                if friend_in_mss.get('sender') not in list_ids:
+                    item['inbox'] = 0
+                    if friend_in_mss.get('is_read') == 0:
+                        item['inbox'] = 1
+                    item['id'] = friend_in_mss.get('sender')
+                    # Update list ID
+                    list_ids.append(friend_in_mss.get('sender'))
+                    # Append item to list
+                    list_items.append(item.copy())
+                else:
+                    if friend_in_mss.get('is_read') == 0:
+                        for item in list_items:
+                            if item.get('id') == friend_in_mss.get('sender') and 'inbox' in item:
+                                item['inbox'] += 1
+
+        # Filter friend not in message and append list
+        for item in list_items:
+            flag = 0
+            for friend in list_friends:
+                if item.get('id') == friend.get('id'):
+                    item['username'] = friend.get('username')
+                    flag = 1
+            if flag == 0:
+                username = detail_user(item.get('id')).get('username')
+                item['username'] = username
+    else:
+        return list_friends
+
+    return list_items
+
+
+def search_friend_message(user_id):
+    list_friends_mss = filter_friend_in_message(user_id)
+
+    if list_friends_mss and len(list_friends_mss) > 0:
+        sub_list_friends = list()
+        username = input_search_username()
+
+        for friend_mss in list_friends_mss:
+            if username in friend_mss.get('username'):
+                sub_list_friends.append(friend_mss)
+
+        return sub_list_friends
+    else:
+        print("No result!")
 
 def display_list_friend_message(list_friend_mss):
     total_inbox = 0
@@ -158,7 +223,3 @@ def sent_message(user_id):
             receiver_id = list_receivers[index].get('id')
             # Type a message and send
             input_reply_message(user_id, receiver_id)
-
-
-if __name__ == '__main__':
-    message(1)
