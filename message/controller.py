@@ -1,59 +1,19 @@
-from database.db_utils import get_all_friend_messages, delete_all_message, delete_message, read_message, detail_user, \
+from database.db_utils import delete_all_message, delete_message, read_message, detail_user, \
     get_all_friends_in_message, get_all_friends
-from friend.controller import display_search_friend, display_list_username
+from friend.controller import display_search_friend, display_list_username, display_list_users, \
+    select_detail_user, reply_message
 from my_log.logger import sync_logger
 from utils.date_util import get_date_now
 from utils.input_utils import input_select_friend, input_number, input_delete_message, \
-    input_reply_message, input_util_function, input_searching_username, input_search_username
+    input_reply_message, input_util_function, input_search_username
 
 
-def filter_friend_in_message(user_id):
-    list_friends_in_mss = get_all_friends_in_message(user_id)
-    list_friends = get_all_friends(user_id)
-    list_ids = list()
-    list_items = list()
+def get_incoming_message(user_id):
 
-    if list_friends_in_mss and len(list_friends_in_mss) > 0:
-        for friend_in_mss in list_friends_in_mss:
-            item = dict()
-            if friend_in_mss.get('sender') == user_id:
-                if friend_in_mss.get('receiver') not in list_ids:
-                    item['id'] = friend_in_mss.get('receiver')
-                    item['is_read'] = friend_in_mss.get('is_read')
-                    # Update list ID
-                    list_ids.append(friend_in_mss.get('receiver'))
-                    # Append item to list
-                    list_items.append(item.copy())
-            elif friend_in_mss.get('receiver') == user_id:
-                if friend_in_mss.get('sender') not in list_ids:
-                    item['inbox'] = 0
-                    if friend_in_mss.get('is_read') == 0:
-                        item['inbox'] = 1
-                    item['id'] = friend_in_mss.get('sender')
-                    # Update list ID
-                    list_ids.append(friend_in_mss.get('sender'))
-                    # Append item to list
-                    list_items.append(item.copy())
-                else:
-                    if friend_in_mss.get('is_read') == 0:
-                        for item in list_items:
-                            if item.get('id') == friend_in_mss.get('sender') and 'inbox' in item:
-                                item['inbox'] += 1
+    pass
 
-        # Filter friend not in message and append list
-        for item in list_items:
-            flag = 0
-            for friend in list_friends:
-                if item.get('id') == friend.get('id'):
-                    item['username'] = friend.get('username')
-                    flag = 1
-            if flag == 0:
-                username = detail_user(item.get('id')).get('username')
-                item['username'] = username
-    else:
-        return list_friends
-
-    return list_items
+def get_sent_message(user_id):
+    pass
 
 
 def search_friend_message(user_id):
@@ -207,19 +167,18 @@ def message(user_id):
         print("No friend message")
 
 
-def sent_message(user_id):
-    # Search receiver
-    list_receivers = input_searching_username()
-    if list_receivers and len(list_receivers):
-        # Display list receivers
-        display_list_username(list_receivers)
-        # Choose receiver number to sent message
-        print("Choose receiver number")
-        min_number = 0
-        max_number = len(list_receivers) - 1
-        index = input_number(min_number, max_number)
+def sent_message(sender_id):
+    list_data = get_all_friends(sender_id)
+    # Display list friend
+    if list_data and len(list_data) > 0:
+        # List all friends
+        display_list_users(list_data)
+        # Select a friend
+        receiver_id = select_detail_user(sender_id, list_data)
 
-        if min_number <= index <= max_number:
-            receiver_id = list_receivers[index].get('id')
-            # Type a message and send
-            input_reply_message(user_id, receiver_id)
+        if receiver_id >= 0:
+            reply_message(sender_id, receiver_id)
+        else:
+            sync_logger.console('Could not sent message')
+    else:
+        print('No Friend')

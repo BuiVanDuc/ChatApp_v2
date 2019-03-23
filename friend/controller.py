@@ -8,10 +8,10 @@ from utils.input_utils import input_number, input_util_function, \
     input_string_data, input_select_user
 
 
-def display_list_users(list_data):
+def display_list_users(list_users):
     print("\nLIST FRIENDS")
     index = 0
-    for _user in list_data:
+    for _user in list_users:
         print("{}. {}".format(index, _user.username))
         index += 1
 
@@ -90,9 +90,9 @@ def reply_message(sender_id, receiver_id):
             if sent_message(sender_id, receiver_id, message):
                 print('Sent message successfully')
             else:
-                sync_logger.console('Sent message failed')
+                 ('Sent message failed')
         else:
-            print('Message is empty, please try agian')
+            print('Message is empty, please try again')
 
 
 def select_util_function_in_friend(user_id, friend_id):

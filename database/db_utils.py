@@ -1,9 +1,7 @@
-from database.models import ChatAppUser, ChatAppMessage, ChatAppFriend, ChatAppBlockUser
+from database.models import ChatAppUser, ChatAppMessage, ChatAppFriend, ChatAppBlockUser, fn
 
 
 # Auth
-
-
 def login(email, password):
     try:
         user = ChatAppUser.get((ChatAppUser.email == email) & (ChatAppUser.password == password))
@@ -138,26 +136,51 @@ def is_user_blocked(blocker_id, user_id):
         pass
     return False
 
-def get_all_friends_in_message(user_id):
+
+def get_incoming_ifo_mss(sender_id, receiver):
     try:
-        query = (ChatAppMessage
-                 .select(ChatAppMessage.sender, ChatAppMessage.receiver, ChatAppMessage.is_read)
-                 .where((ChatAppMessage.sender == user_id) | (ChatAppMessage.receiver == user_id))
-                 )
-        return list(query.dicts())
+        _ret_data = (ChatAppUser.select(ChatAppUser.id, ChatAppUser.username,
+                                        fn.COUNT(ChatAppMessage.is_read == 1).alias('inbox')) \
+            .join(ChatAppMessage, on=(ChatAppUser.id == sender_id))
+            .where(
+            (ChatAppMessage.sender == sender_id) & (ChatAppMessage.receiver == receiver) & ChatAppMessage.is_read == 0))
+
+        return _ret_data
+    except Exception as Ex:
+        print(Ex)
+
+
+def get_sender(user_id):
+    try:
+        _ret_data = (ChatAppMessage
+                     .select(ChatAppMessage.sender, ChatAppMessage.receiver)
+                     .order_by(ChatAppMessage.sent_date.desc())
+                     .distinct()
+                     .where(ChatAppMessage.receiver == user_id))
+        return _ret_data
     except Exception as Ex:
         pass
 
 
-# Queries message
-def get_all_friend_messages(sender_id, receiver_id):
+def get_receiver(user_id):
     try:
-        messages = (
-            (ChatAppMessage.select().where(ChatAppMessage.sender == sender_id, ChatAppMessage.receiver == receiver_id) |
-             (ChatAppMessage.select().where(ChatAppMessage.sender == receiver_id,
-                                            ChatAppMessage.receiver == sender_id))).order_by(
-                ChatAppMessage.sent_date.asc()))
-        return list(messages.dicts())
+        _ret_date = (ChatAppMessage
+                     .select(ChatAppMessage.sender, ChatAppMessage.receiver)
+                     .order_by(ChatAppMessage.sent_date.desc())
+                     .distinct()
+                     .where(ChatAppMessage.sender == user_id))
+        return _ret_date
+    except Exception as Ex:
+        pass
+# Queries message
+def get_detail_messages(sender_id, receiver_id):
+    try:
+        _ret_data = (ChatAppMessage
+                     .select()
+                     .where((ChatAppMessage.sender == sender_id) & (ChatAppMessage.receiver == receiver_id) |
+                            (ChatAppMessage.sender == receiver_id) & (ChatAppMessage.receiver == sender_id))
+                     .order_by(ChatAppMessage.sent_date.asc()))
+        return _ret_data
     except Exception as Ex:
         pass
 
@@ -220,7 +243,8 @@ def list_friend_by_sent_date(user_id):
         pass
 
 
-ret_data = search_friends_by_user_id_and_friend_name(1,'c')
+ret_data = get_incoming_ifo_mss(1, 2)
 
-for _friend in ret_data:
-    print(_friend.id)
+for _user in ret_data:
+    print(_user.username)
+    print(_user.inbox)

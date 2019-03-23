@@ -68,8 +68,9 @@ def input_sex():
 def input_string_data(message="Enter string:\t"):
     return input(message)
 
-def input_number(min_number, max_number):
-    print("Enter number in [{}:{}]".format(min_number, max_number))
+
+def input_number(min_number, max_number, message='Enter number in'):
+    print("[{}:{}]".format(message, min_number, max_number))
     try:
         number = int(input('Enter number:\t'))
         if min_number <= number <= max_number:
