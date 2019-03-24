@@ -12,13 +12,18 @@ MENU_MAIN = '''\r\n MANAGE MAIN
 3. Logout
 '''
 MENU_MESSAGE = '''\r\n MANAGE MESSAGE
-1. View and other utils
+1. View message
 2. Sent message
 2. Back to main
 '''
 
+MENU_VIEW_MESSAGE = '''\r\nMENU VIEW MESSAGE
+1. INBOX
+2. SENT
+'''
+
 MENU_FRIEND = '''\r\n MANAGE FRIEND
-1. View and other utils
+1. View
 2. Add friend
 3. Block
 4. Unblock
@@ -50,20 +55,25 @@ MENU_OPTION_DEL_MESSAGE = '''\r\n OPTION DELETE MESSAGE
 2. Delete all messages 
 '''
 
-def display_menu(menu):
+LIST_MENU = {
+    "login": MENU_CHAT_APP,
+    "main": MENU_MAIN,
+    "message": MENU_MESSAGE,
+    "friend": MENU_FRIEND,
+}
+
+
+def show_menu_and_choose_action(menu):
     # Clear screen
     os.system('cls')
-    if menu == 1:
-        print(MENU_CHAT_APP)
-    elif menu == 2:
-        print(MENU_MAIN)
-    elif menu == 3:
-        print(MENU_MESSAGE)
-    elif menu == 4:
-        print(MENU_FRIEND)
-    try:
-        option = input('\r\nEnter your choice: ')
-        return int(option)
-    except Exception as Ex:
-        print(Ex)
-        return -1
+    if menu in LIST_MENU.keys():
+        print(LIST_MENU[menu])
+        try:
+            option = input('\r\nEnter your choice: ')
+            return int(option)
+        except Exception as Ex:
+            print(Ex)
+    else:
+        print("Menu: {} is not existed".format(menu))
+
+    return -1

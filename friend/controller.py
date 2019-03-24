@@ -8,8 +8,8 @@ from utils.input_utils import input_number, input_util_function, \
     input_string_data, input_select_user
 
 
-def display_list_users(list_users):
-    print("\nLIST FRIENDS")
+def display_list_users(list_users, title='LIST_FRIENDS'):
+    print(title)
     index = 0
     for _user in list_users:
         print("{}. {}".format(index, _user.username))
@@ -22,7 +22,7 @@ def select_detail_user(user_id, list_friends):
     # Select number user
     if number == 1:
         index = input_number(0, len(list_friends) - 1)
-        if index is not None:
+        if index >= 0:
             # Display detail info friend
             friend_id = list_friends[index].id
             return friend_id
@@ -35,7 +35,7 @@ def select_detail_user(user_id, list_friends):
 
             # Choosing friend number to view detail
             index = input_number(0, len(list_friends) - 1)
-            if index is not None:
+            if index >= 0:
                 # Display detail a friend
                 friend_id = list_friends[index].id
                 return friend_id
@@ -90,7 +90,7 @@ def reply_message(sender_id, receiver_id):
             if sent_message(sender_id, receiver_id, message):
                 print('Sent message successfully')
             else:
-                 ('Sent message failed')
+                print('Sent message failed')
         else:
             print('Message is empty, please try again')
 

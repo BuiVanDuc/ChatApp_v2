@@ -5,19 +5,43 @@ from my_log.logger import sync_logger
 from utils.input_utils import input_valid_email, input_password, input_valid_date, input_none_empty_data, input_sex
 
 
+class Singleton:
+    class __Singleton:
+
+        def __init__(self, data):
+            self.val = data
+
+        def __str__(self):
+            return repr(self) + self.val
+
+    instance = None
+
+    def set(self, data):
+        if not Singleton.instance:
+            Singleton.instance = Singleton.__Singleton(data)
+        else:
+            Singleton.instance.val = data
+
+    def get(self):
+        if Singleton.instance:
+            return Singleton.instance.val
+
+        return None
+
+
+current_user = Singleton()
+
 def auth_login():
     email = input_valid_email()
     password = input_password()
     user = login(email, password)
-    user_id = None
     if user:
-        user_id = user.id
+        current_user.set(user)
         sync_logger.console("Log in successfully!")
+        return True
     else:
-        sync_logger.console("Email or password is incorrect, please try again!")
-
-    return user_id
-
+        print("Login is failed")
+    return False
 
 def register_account():
     # User enter data

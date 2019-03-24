@@ -1,8 +1,9 @@
 import html
 import re
 
+from database.db_utils import sent_message
 from menu.controller import MENU_SEX_OPTIONS, MENU_OPTION_FUNCTION, \
-    MENU_OPTION_DEL_MESSAGE, MENU_SELECT_USER
+    MENU_OPTION_DEL_MESSAGE, MENU_SELECT_USER, MENU_VIEW_MESSAGE
 from my_log.logger import sync_logger
 from utils.date_util import convert_string_to_date, FORMAT_DATE
 from utils.email_util import is_email_validated
@@ -70,13 +71,16 @@ def input_string_data(message="Enter string:\t"):
 
 
 def input_number(min_number, max_number, message='Enter number in'):
-    print("[{}:{}]".format(message, min_number, max_number))
+    print("{} [{}:{}]".format(message, min_number, max_number))
     try:
         number = int(input('Enter number:\t'))
         if min_number <= number <= max_number:
             return number
+        else:
+            print('Invalid number, please choose number in: [{}:{}]'.format(min_number, max_number))
     except Exception as Ex:
         sync_logger.console(Ex)
+    return -1
 
 
 def input_select_user():
@@ -110,3 +114,19 @@ def input_search_username():
         return username
     else:
         print('You enter a empty username, please try again!')
+
+
+def input_view_message():
+    print(MENU_VIEW_MESSAGE)
+    return input_number(1, 2, message="Enter option view message:")
+
+
+def input_reply_message(sender_id, receiver_id):
+    message = input_string_data("Type a message:")
+    if message and len(message) > 0:
+        if sent_message(sender_id, receiver_id, message):
+            print('Sent message successfully')
+        else:
+            sync_logger.console('Could not sent message')
+    else:
+        print('Mesage is empty:')

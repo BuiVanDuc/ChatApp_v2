@@ -110,3 +110,4 @@ def convert_sex_number_to_name(sex_number):
     for key, value in LIST_AUGI_GENDER.items():
         if value == sex_number:
             return key
+
